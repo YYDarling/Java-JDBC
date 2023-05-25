@@ -1,5 +1,4 @@
 import java.sql.*;
-import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -61,15 +60,51 @@ public class Main {
             /*
             litter project
              */
-        Statement statement = connection.createStatement();
-        Scanner scanner = new Scanner(System.in)){
-            ResultSet res = statement.executeQuery("select * from user where user_name='"+scanner.nextLine()+"'and pwd='"+scanner.nextLine()+"';");
-            while (res.next()){
-                String user_name = res.getString(1); //列从1开始
-                System.out.println(user_name+" 登陆成功！");
-            }
+        //Statement statement = connection.createStatement();
+        //Scanner scanner = new Scanner(System.in)){
+        //    ResultSet res = statement.executeQuery("select * from user where user_name='"+scanner.nextLine()+"'and pwd='"+scanner.nextLine()+"';");
+        //    while (res.next()){
+        //        String user_name = res.getString(1); //列从1开始
+        //        System.out.println(user_name+" 登陆成功！");
+        //    }
             //select * from user where username='Test' and pwd='1111' or 1=1; -- '
             //作弊
+
+             //预编译, 防止sql注入
+             //PreparedStatement statement = connection.prepareStatement("select * from user where user_name= ? and pwd=?;"); //预编译
+             //Scanner scanner = new Scanner(System.in)){
+
+            //statement.setString(1, scanner.nextLine());
+            //statement.setString(2, scanner.nextLine());
+
+            //System.out.println(statement.toString());    //打印查看一下最终执行的
+
+            //ResultSet res = statement.executeQuery();
+            //while (res.next()){
+            //    String user_name = res.getString(1);
+            //    System.out.println(user_name+" 登陆成功！");
+            //}
+
+             /*
+                事务
+             */
+             Statement statement = connection.createStatement()){
+
+            connection.setAutoCommit(false);  //关闭自动提交，现在将变为我们手动提交
+
+            statement.executeUpdate("insert into user values ('a', 1234)");
+
+            Savepoint savepoint = connection.setSavepoint(); //设置一个保存点
+            statement.executeUpdate("insert into user values ('b', 1234)");
+            statement.executeUpdate("insert into user values ('c', 1234)");
+
+            connection.rollback(savepoint); //回滚到保存点
+
+            connection.commit();   //如果前面任何操作出现异常，将不会执行commit()，之前的操作也就不会生效
+            //connection.rollback(); //回滚，将之前的操作全部撤销
+            //connection.commit();   //提交，将之前的操作全部生效
+            //比较适合银行转账等操作
+
         }catch (SQLException e){
             e.printStackTrace();
         }
